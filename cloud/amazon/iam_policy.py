@@ -58,7 +58,9 @@ options:
 notes:
   - 'Currently boto does not support the removal of Managed Policies, the module will not work removing/adding managed policies.'
 author: "Jonathan I. Davila (@defionscode)"
-extends_documentation_fragment: aws
+extends_documentation_fragment:
+    - aws
+    - ec2
 '''
 
 EXAMPLES = '''
@@ -269,7 +271,7 @@ def main():
       iam_name=dict(default=None, required=False),
       policy_name=dict(default=None, required=True),
       policy_document=dict(default=None, required=False),
-      policy_json=dict(type='str', default=None, required=False),
+      policy_json=dict(default=None, required=False),
       skip_duplicates=dict(type='bool', default=True, required=False)
   ))
 
@@ -305,7 +307,10 @@ def main():
   region, ec2_url, aws_connect_kwargs = get_aws_connection_info(module)
 
   try:
-      iam = boto.iam.connection.IAMConnection(**aws_connect_kwargs)
+    if region:
+        iam = boto.iam.connect_to_region(region, **aws_connect_kwargs)
+    else:
+        iam = boto.iam.connection.IAMConnection(**aws_connect_kwargs)
   except boto.exception.NoAuthHandlerFound, e:
       module.fail_json(msg=str(e))
 
